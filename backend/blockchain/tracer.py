@@ -5,6 +5,8 @@ from collections import deque, defaultdict
 from typing import List, Dict, Set, Any, Optional
 from datetime import datetime, timezone
 import os
+import uuid
+import hashlib
 
 from backend.blockchain.rpc_client import BlockchainClient
 from backend.neo4j.client import Neo4jClient
@@ -62,8 +64,9 @@ class BlockchainTracer:
 
     async def trace(
         self,
-        source_wallet: str,
-        trace_id: str,
+        source_wallet: Optional[str] = None,
+        trace_id: Optional[str] = None,
+        fraud_tx_hash: Optional[str] = None,
         max_hops: Optional[int] = None,
         max_nodes: Optional[int] = None,
         stop_at_vasp: Optional[bool] = None,
@@ -72,20 +75,45 @@ class BlockchainTracer:
         end_time: Optional[str] = None,
         from_block: Optional[str] = None,
         to_block: Optional[str] = None,
-        websocket_callback=None
+        websocket_callback=None,
+        **kwargs
     ) -> Dict[str, Any]:
         """
-        BFS multi-hop graph traversal starting from victim source wallet.
+        BFS multi-hop graph traversal starting from victim source wallet or fraud transaction hash.
         Supports 10-15 hops depth, 1,000-5,000 graph nodes, configurable time window,
-        ERC-20/ETH tokens, and terminal VASP detection.
+        ERC-20/ETH tokens, FIFO taint tracking, and terminal VASP detection.
         """
+        trace_id = trace_id or str(uuid.uuid4())
+        initial_taint = 100.0
+
+        if fraud_tx_hash:
+            try:
+                tx_data = await self.rpc.get_transaction(fraud_tx_hash)
+                if tx_data:
+                    # In theft/fraud, attacker receives the stolen funds ('to' address)
+                    source_wallet = tx_data.get("to") or tx_data.get("from") or source_wallet
+                    val = tx_data.get("value", 0.0)
+                    try:
+                        initial_taint = float(val) if float(val) > 0 else 100.0
+                    except (ValueError, TypeError):
+                        initial_taint = 100.0
+                elif not source_wallet:
+                    source_wallet = "0x0000000000000000000000000000000000000000"
+            except Exception as e:
+                logger.warning(f"Failed to resolve fraud_tx_hash {fraud_tx_hash}: {e}")
+                if not source_wallet:
+                    source_wallet = "0x0000000000000000000000000000000000000000"
+
+        if not source_wallet:
+            source_wallet = "0x0000000000000000000000000000000000000000"
+
         source_wallet = source_wallet.lower()
         effective_max_hops = max_hops if max_hops is not None else self.max_hops
         effective_max_nodes = max_nodes if max_nodes is not None else self.max_nodes
         effective_stop_at_vasp = stop_at_vasp if stop_at_vasp is not None else self.stop_at_vasp
 
         logger.info(
-            f"Starting BFS trace for {source_wallet} (trace_id={trace_id}, "
+            f"Starting BFS trace for {source_wallet} (trace_id={trace_id}, fraud_tx={fraud_tx_hash}, "
             f"max_depth={effective_max_hops}, max_nodes={effective_max_nodes}, stop_at_vasp={effective_stop_at_vasp})"
         )
 
@@ -96,6 +124,7 @@ class BlockchainTracer:
         
         discovered_vasps: Dict[str, Dict[str, Any]] = {}
         wallet_transfers_map: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+        wallet_taint: Dict[str, float] = {source_wallet: initial_taint}
 
         try:
             while queue and len(visited) < effective_max_nodes:
@@ -144,10 +173,40 @@ class BlockchainTracer:
                     value = str(transfer.get('value', '0'))
                     asset = transfer.get('asset', 'ETH')
                     transfer_chain = transfer.get('chain', chain)
+                    transfer_data_mode = transfer.get('data_mode', 'LIVE')
                     ts = transfer.get('timestamp') or datetime.now(timezone.utc).isoformat()
 
                     if not from_addr or not to_addr or to_addr == from_addr:
                         continue
+
+                    # FIFO Taint computation
+                    try:
+                        transfer_val = float(value)
+                    except (ValueError, TypeError):
+                        transfer_val = 0.1
+
+                    remaining_taint = wallet_taint.get(from_addr, initial_taint if from_addr == source_wallet else 0.0)
+                    edge_taint = min(transfer_val, remaining_taint) if remaining_taint > 0 else transfer_val
+                    wallet_taint[from_addr] = max(0.0, remaining_taint - edge_taint)
+                    wallet_taint[to_addr] = wallet_taint.get(to_addr, 0.0) + edge_taint
+
+                    # Check if target is a known VASP / Mixer / DEX
+                    to_vasp = self._lookup_vasp(to_addr)
+                    if to_vasp:
+                        discovered_vasps[to_addr] = to_vasp
+                        ent_type = str(to_vasp.get('entity_type', '')).upper()
+                        if 'MIXER' in ent_type:
+                            boundary_type = 'MIXER'
+                        elif 'DEX' in ent_type:
+                            boundary_type = 'DEX'
+                        else:
+                            boundary_type = 'EXCHANGE'
+                    else:
+                        boundary_type = 'NONE'
+
+                    edge_id = f"e_{tx_hash[:10]}_{from_addr[:6]}_{to_addr[:6]}"
+                    taint_source_tx = fraud_tx_hash or tx_hash
+                    evidence_id = f"sha256:{hashlib.sha256((tx_hash + str(round(edge_taint, 4))).encode()).hexdigest()}"
 
                     hop_rec = {
                         'hop_number': hop_depth + 1,
@@ -157,15 +216,16 @@ class BlockchainTracer:
                         'tx_hash': tx_hash,
                         'asset': asset,
                         'chain': transfer_chain,
-                        'timestamp': ts
+                        'timestamp': ts,
+                        'edge_id': edge_id,
+                        'taint_amount': round(edge_taint, 4),
+                        'taint_source_tx': taint_source_tx,
+                        'evidence_id': evidence_id,
+                        'boundary_type': boundary_type,
+                        'data_mode': transfer_data_mode
                     }
                     hops.append(hop_rec)
                     wallet_transfers_map[from_addr].append(hop_rec)
-
-                    # Check if target is a known VASP
-                    to_vasp = self._lookup_vasp(to_addr)
-                    if to_vasp:
-                        discovered_vasps[to_addr] = to_vasp
 
                     # Notify WebSocket callback if provided
                     if websocket_callback:
@@ -231,14 +291,20 @@ class BlockchainTracer:
             for idx, h in enumerate(hops):
                 cytoscape_edges.append({
                     "data": {
-                        "id": f"e_{idx}_{h['tx_hash'][:8] if h.get('tx_hash') else idx}",
+                        "id": h.get('edge_id') or f"e_{idx}_{h['tx_hash'][:8] if h.get('tx_hash') else idx}",
                         "source": h['from'],
                         "target": h['to'],
                         "label": f"{h['value']} {h['asset']}",
                         "amount": h['value'],
                         "asset": h['asset'],
                         "tx_hash": h['tx_hash'],
-                        "timestamp": h.get('timestamp')
+                        "timestamp": h.get('timestamp'),
+                        "edge_id": h.get('edge_id'),
+                        "taint_amount": h.get('taint_amount', 0.0),
+                        "taint_source_tx": h.get('taint_source_tx'),
+                        "evidence_id": h.get('evidence_id'),
+                        "boundary_type": h.get('boundary_type', 'NONE'),
+                        "data_mode": h.get('data_mode', 'LIVE')
                     }
                 })
 

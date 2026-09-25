@@ -87,7 +87,8 @@ class BlockchainClient:
                         'value': str(val_wei / 10**18),
                         'gas_used': str(int(tx_info.get('gas', '0x5208'), 16)),
                         'block_number': int(tx_info.get('blockNumber', '0x0'), 16),
-                        'timestamp': str(int(time.time()))
+                        'timestamp': str(int(time.time())),
+                        'data_mode': 'LIVE'
                     }
                     self._set_cache(cache_key, json.dumps(result), self.cache_ttl)
                     return result
@@ -106,7 +107,8 @@ class BlockchainClient:
             'value': f"{val_float:.4f}",
             'gas_used': "21000",
             'block_number': 19200000 + (int(h[4:8], 16) % 10000),
-            'timestamp': str(int(time.time()))
+            'timestamp': str(int(time.time())),
+            'data_mode': 'SIMULATION'
         }
         self._set_cache(cache_key, json.dumps(result), self.cache_ttl)
         return result
@@ -127,7 +129,11 @@ class BlockchainClient:
         cached = self._get_cache(cache_key)
         if cached:
             logger.debug(f"Cache HIT: transfers for {address}")
-            return json.loads(cached)
+            loaded = json.loads(cached)
+            # Tag as CACHED on cache hit
+            for item in loaded:
+                item['data_mode'] = 'CACHED'
+            return loaded
 
         is_synthetic_test = any(address.startswith(p) for p in ["0xaaaa", "0xbbbb", "0xcccc", "0xdddd", "0xbeef"])
 
@@ -174,7 +180,8 @@ class BlockchainClient:
                                     'block_num': block_num,
                                     'asset': t.get('asset') or ('ETH' if chain == 'ETH' else 'POL'),
                                     'chain': chain,
-                                    'timestamp': ts
+                                    'timestamp': ts,
+                                    'data_mode': 'LIVE'
                                 })
                         if transfers:
                             self._set_cache(cache_key, json.dumps(transfers), self.cache_ttl)
@@ -215,7 +222,8 @@ class BlockchainClient:
                                 'block_num': item.get("block_number", 0),
                                 'asset': 'ETH' if chain == 'ETH' else 'POL',
                                 'chain': chain,
-                                'timestamp': ts
+                                'timestamp': ts,
+                                'data_mode': 'LIVE'
                             })
                     
                     if live_transfers:
@@ -264,7 +272,8 @@ class BlockchainClient:
                 'tx_hash': tx_h,
                 'block_num': 19200000 + (seed_num % 5000),
                 'asset': 'ETH' if chain == 'ETH' else 'POL',
-                'chain': chain
+                'chain': chain,
+                'data_mode': 'SIMULATION'
             })
         return transfers
 

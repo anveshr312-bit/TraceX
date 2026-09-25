@@ -28,9 +28,9 @@ KNOWN_CURATED_LABELS = [
     {"address": "0x0a869d79a7052c7f1b55a8ebabbea3420f0d1e13", "name": "Kraken 2", "type": "EXCHANGE", "confidence": 0.99},
     {"address": "0x267be1c1d684f78cb4f6a176c4911b741e4ffdc0", "name": "Kraken 4", "type": "EXCHANGE", "confidence": 0.98},
     
-    # Indian Exchanges (I4C relevance)
+    # Indian Exchanges (I4C relevance) & Core Contracts
     {"address": "0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be", "name": "CoinDCX Treasury", "type": "EXCHANGE", "confidence": 0.97},
-    {"address": "0xdac17f958d2ee523a2206206994597c13d831ec7", "name": "WazirX Hot Wallet", "type": "EXCHANGE", "confidence": 0.96},
+    {"address": "0xdac17f958d2ee523a2206206994597c13d831ec7", "name": "Smart Contract: Tether USD (USDT)", "type": "CONTRACT", "confidence": 1.0},
     {"address": "0x1111111254fb6c44bac0bed2854e76f90643097d", "name": "1inch Aggregator", "type": "DEX", "confidence": 0.95},
     
     # Privacy Mixers & Blacklisted Entities
@@ -112,27 +112,10 @@ class ExchangeCrawler:
                     existing.entity_type = item["type"]
                     existing.confidence_score = item["confidence"]
 
-            # 2. Seed generated exchange sub-addresses for coverage (500+ addresses)
-            for ex in self.KNOWN_EXCHANGES:
-                for idx in range(1, 45):
-                    # Deterministic known test-case addresses
-                    seed_str = f"{ex.lower()}_hot_cluster_node_{idx:03d}"
-                    import hashlib
-                    h = hashlib.sha256(seed_str.encode()).hexdigest()
-                    gen_addr = "0x" + h[:40]
-                    existing = db.query(WalletLabel).filter_by(address=gen_addr).first()
-                    if not existing:
-                        db.add(WalletLabel(
-                            address=gen_addr,
-                            entity_name=f"{ex} Deposit Vault #{idx}",
-                            entity_type="EXCHANGE",
-                            confidence_score=0.90,
-                            source_db="SerpAPI_Crawler"
-                        ))
-                        inserted_count += 1
+            # Purged 500 fake algorithmic addresses to ensure 100% forensic honesty
 
             db.commit()
-            logger.info(f"Seeded {inserted_count} wallet labels into database")
+            logger.info(f"Seeded {inserted_count} curated wallet labels into database")
             return inserted_count
         except Exception as e:
             logger.error(f"Error seeding wallet labels: {e}")

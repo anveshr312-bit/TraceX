@@ -12,6 +12,8 @@ from fastapi.responses import JSONResponse
 from backend.database.db import init_db
 from backend.scraper.exchange_crawler import ExchangeCrawler
 from backend.api.routes import router as api_router
+from backend.api.routes_intelligence import router as intelligence_router
+from backend.api.routes_copilot import router as copilot_router
 
 # Logging Configuration
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
@@ -22,22 +24,29 @@ logging.basicConfig(
 logger = logging.getLogger("cryptofraud-api")
 
 app = FastAPI(
-    title="CryptoFraud Trace API",
+    title="TraceX Forensics API",
     description="Real-Time Cryptocurrency Fraud Attribution & Blockchain Forensics for Indian Law Enforcement (I4C / MHA)",
     version="1.0.0"
 )
 
-# CORS Setup
+# CORS Setup - Allow Person 2 Vite frontend on :3000
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",
+        "*"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include API Router
+# Include All Routers
 app.include_router(api_router)
+app.include_router(intelligence_router)
+app.include_router(copilot_router)
 
 from backend.api.ws_manager import manager
 

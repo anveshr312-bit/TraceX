@@ -81,26 +81,27 @@ class NoticeGenerator:
         
         story = []
 
-        # Header Badge
-        story.append(Paragraph("<b>CONFIDENTIAL & STATUTORY LEGAL NOTICE</b>", ParagraphStyle(
-            'ConfidentialHeader',
-            parent=self.styles['Normal'],
-            fontSize=9,
-            textColor=colors.HexColor('#991b1b'),
-            alignment=1,
-            fontName='Helvetica-Bold'
-        )))
-        story.append(Spacer(1, 6))
-
-        # Emblem & Authority Header
-        story.append(Paragraph("<b>GOVERNMENT OF INDIA</b>", self.title_style))
+        # Neutral Notice Header
+        story.append(Paragraph("<b>INVESTIGATIVE INFORMATION REQUEST / SECTION 91 CrPC NOTICE DRAFT</b>", self.title_style))
         story.append(Paragraph(
-            "<b>INDIAN CYBER CRIME COORDINATION CENTRE (I4C)</b><br/>"
-            "Ministry of Home Affairs | National Cyber Crime Forensic Division<br/>"
-            "New Delhi, India | Email: legal-coordination@i4c.gov.in",
+            "<b>BLOCKCHAIN INVESTIGATION & FORENSICS ATTRIBUTION REPORT</b><br/>"
+            "Forensics Division | Reference Framework: Section 91 CrPC & IT Act, 2000",
             self.subtitle_style
         ))
-        story.append(Spacer(1, 10))
+        story.append(Spacer(1, 6))
+        # Mandatory disclaimer badge
+        story.append(Paragraph(
+            "<b>DRAFT FORM FOR LAW ENFORCEMENT OFFICER REVIEW — REQUIRES COMPETENT POLICE SIGNATURE BEFORE SERVING.</b>",
+            ParagraphStyle(
+                'DisclaimerBadge',
+                parent=self.styles['Normal'],
+                fontSize=8,
+                textColor=colors.HexColor('#b91c1c'),
+                alignment=1,
+                fontName='Helvetica-Bold'
+            )
+        ))
+        story.append(Spacer(1, 8))
         story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1e3a8a'), spaceAfter=12))
 
         # Reference & Date Table
