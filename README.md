@@ -186,11 +186,11 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 
 #### 5. Frontend Setup (in a new terminal)
 ```bash
-cd frontend
+cd new-ui
 npm install
 npm run dev
 ```
-*Frontend UI available at: [http://localhost:3000](http://localhost:3000)*
+*Frontend UI available at: [http://localhost:5173](http://localhost:5173)*
 
 ---
 
@@ -206,7 +206,7 @@ cp .env.example .env
 docker-compose up -d
 
 # 3. Access interfaces:
-# Frontend Dashboard : http://localhost:3000
+# Frontend Dashboard : http://localhost:5173
 # Backend API Docs   : http://localhost:8000/docs
 # Neo4j Browser      : http://localhost:7474
 ```

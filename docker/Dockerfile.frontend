@@ -2,14 +2,13 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY frontend/package.json frontend/package-lock.json* ./
+COPY new-ui/package.json new-ui/package-lock.json* ./
 
 RUN npm install
 
-COPY frontend ./
+COPY new-ui ./
 
-ENV NEXT_TELEMETRY_DISABLED=1
+EXPOSE 5173
 
-EXPOSE 3000
+CMD ["npm", "run", "dev", "--", "--host"]
 
-CMD ["npm", "run", "dev"]
