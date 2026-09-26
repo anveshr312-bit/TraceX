@@ -95,6 +95,37 @@ class BlockchainClient:
             except Exception as e:
                 logger.warning(f"Live RPC failed for {tx_hash}: {e}")
 
+        # Attempt live Public Blockscout API query (Real on-chain tx)
+        if tx_hash.startswith("0x") and len(tx_hash) == 66:
+            try:
+                import requests
+                url = f"https://eth.blockscout.com/api/v2/transactions/{tx_hash}"
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept": "application/json"
+                }
+                resp = await asyncio.to_thread(requests.get, url, headers=headers, timeout=4)
+                if resp.status_code == 200:
+                    tx_info = resp.json()
+                    if tx_info and tx_info.get('hash'):
+                        raw_val = tx_info.get('value', '0')
+                        val_eth = float(raw_val) / 10**18 if str(raw_val).isdigit() else float(raw_val or 0.0)
+                        result = {
+                            'hash': tx_info.get('hash'),
+                            'from': (tx_info.get('from', {}).get('hash') or '').lower(),
+                            'to': (tx_info.get('to', {}).get('hash') or '').lower(),
+                            'value': str(val_eth),
+                            'gas_used': str(tx_info.get('gas_used', '21000')),
+                            'block_number': tx_info.get('block_number', 19200000),
+                            'timestamp': str(tx_info.get('timestamp') or int(time.time())),
+                            'data_mode': 'LIVE'
+                        }
+                        self._set_cache(cache_key, json.dumps(result), self.cache_ttl)
+                        logger.info(f"Retrieved real on-chain transaction {tx_hash} via Blockscout")
+                        return result
+            except Exception as e:
+                logger.debug(f"Blockscout tx lookup failed for {tx_hash}: {e}")
+
         # Deterministic synthetic mock transaction for tests & demos
         h = hashlib.sha256(tx_hash.encode()).hexdigest()
         from_addr = "0x" + h[0:40]
@@ -195,7 +226,10 @@ class BlockchainClient:
             try:
                 import requests
                 base_url = "https://eth.blockscout.com/api/v2" if chain == 'ETH' else "https://polygon.blockscout.com/api/v2"
-                headers = {"User-Agent": "CryptoFraudTrace/1.0", "Accept": "application/json"}
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept": "application/json"
+                }
                 url = f"{base_url}/addresses/{address}/transactions"
                 
                 resp = await asyncio.to_thread(requests.get, url, headers=headers, timeout=3.5)

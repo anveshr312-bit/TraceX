@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, Navigate, useParams } from 'react-router-dom';
 import { ForensicCase } from './types';
 import { api, BackendTraceDetail, securityEvents, SecurityEventDetail } from './api/client';
 import { buildForensicCaseFromBackend } from './utils/graphAdapter';
@@ -13,6 +13,12 @@ import { ForbiddenPage } from './pages/ForbiddenPage';
 import { AuthProvider } from './hooks/useAuth';
 import { RequireAuth } from './components/RequireAuth';
 import { UnavailableBanner } from './components/UnavailableBanner';
+import ForensicWorkstation from './components/ForensicWorkstation';
+
+function ForensicWorkstationPage() {
+  const { caseId } = useParams();
+  return <ForensicWorkstation caseId={caseId || ''} />;
+}
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -615,26 +621,7 @@ function AppRoutes() {
           path="/cases/:caseId"
           element={
             <RequireAuth>
-              <CaseDetailPage
-                currentCase={currentCase}
-                activeHop={activeHop}
-                setActiveHop={setActiveHop}
-                isTracing={isTracing}
-                setIsTracing={setIsTracing}
-                traceStatus={traceStatus}
-                traceProgress={traceProgress}
-                latestHop={latestHop}
-                isExecuting={isExecuting}
-                onPinNode={handlePinNode}
-                onSelectCase={handleSelectCase}
-                onExecuteTrace={handleExecuteTrace}
-                onResetTrace={handleResetTrace}
-                isNoticeModalOpen={isNoticeModalOpen}
-                setIsNoticeModalOpen={setIsNoticeModalOpen}
-                isExportModalOpen={isExportModalOpen}
-                setIsExportModalOpen={setIsExportModalOpen}
-                onNavigateHome={() => navigate('/')}
-              />
+              <ForensicWorkstationPage />
             </RequireAuth>
           }
         />
@@ -653,3 +640,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
