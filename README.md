@@ -11,8 +11,7 @@
 
 ## 📌 Submission & Review Quick Links
 
-- 📂 **Public Repository**: [https://github.com/apoorvgarewal07/TraceX](https://github.com/apoorvgarewal07/TraceX)
-- 🎥 **Demo Video (< 3 Minutes)**: [Watch Local Walkthrough Video (YouTube)](https://www.youtube.com/watch?v=b2wgMwsDp70)
+
 - 🎯 **Selected Track**: `[Track Name: e.g., AI & Machine Learning / Web Automation / Open Track]`
 - 🔎 **SerpApi Integration Breakdown**: [Jump to SerpApi Section](#-how-the-project-uses-serpapi)
 
