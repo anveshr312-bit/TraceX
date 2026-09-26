@@ -11,6 +11,7 @@ interface TopBarProps {
   onOpenNewInvestigation?: () => void;
   onOpenEvidence?: () => void;
   onResetCamera?: () => void;
+  onOpenCopilot?: () => void;
   isLive?: boolean;
   onQuickTrace?: (hash: string, title: string) => void;
   isTracing?: boolean;
@@ -27,12 +28,14 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenNewInvestigation,
   onOpenEvidence,
   onResetCamera,
+  onOpenCopilot,
   isLive = false,
   onQuickTrace,
   isTracing = false,
   onToggleSidebar,
   isSidebarOpen = false,
 }) => {
+
   const navigate = useNavigate();
   const [quickInput, setQuickInput] = useState('');
 
@@ -201,6 +204,19 @@ export const TopBar: React.FC<TopBarProps> = ({
             <span>Evidence</span>
           </button>
         )}
+
+        {/* AI Copilot Button */}
+        {onOpenCopilot && (
+          <button
+            onClick={onOpenCopilot}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 text-xs font-mono font-medium shadow-sm transition cursor-pointer"
+            title="Open AI Copilot (real on-chain data)"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Copilot</span>
+          </button>
+        )}
+
 
         {/* Reset Camera if in 3D */}
         {viewMode === '3d' && onResetCamera && (

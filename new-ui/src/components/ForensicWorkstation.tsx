@@ -42,6 +42,8 @@ import { RightDossierPanel as RightDossierPanel2D } from './studio/RightDossierP
 import { Section91NoticeModal } from './studio/Section91NoticeModal';
 import { EvidencePanel } from './studio/EvidencePanel';
 import { NewInvestigationModal } from './studio/NewInvestigationModal';
+import { CopilotDrawer } from './studio/CopilotDrawer';
+
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -133,6 +135,8 @@ function ForensicWorkstationInner({ caseId }: { caseId: string }) {
   const [caseTitle, setCaseTitle] = useState<string>('Case #TRX-2024-00847 — Phishing Drain (142.5 ETH)');
   const [isLive, setIsLive] = useState<boolean>(false);
   const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState<boolean>(true);
+  const [isCopilotOpen, setIsCopilotOpen] = useState<boolean>(false);
+
 
   // --- 2D Dendrogram State ---
   const [currentCase, setCurrentCase] = useState<ForensicCase>(PRIMARY_CASE);
@@ -565,8 +569,10 @@ function ForensicWorkstationInner({ caseId }: { caseId: string }) {
                 setSelectedEvidenceId(null);
                 setIsEvidenceOpen(true);
               }}
+              onOpenCopilot={() => setIsCopilotOpen(true)}
               onResetCamera={handleResetView}
             />
+
 
             {/* Top-Right Canvas Overlay Controls: 2D / 3D Toggle + Reset View */}
             <CanvasOverlayControls
@@ -780,6 +786,14 @@ function ForensicWorkstationInner({ caseId }: { caseId: string }) {
         isOpen={isNewInvestigationOpen}
         onClose={() => setIsNewInvestigationOpen(false)}
         onStartTrace={handleStartTrace}
+      />
+
+      {/* AI Copilot — wired to real live graph data (no hardcoded fixtures) */}
+      <CopilotDrawer
+        isOpen={isCopilotOpen}
+        onClose={() => setIsCopilotOpen(false)}
+        liveNodes={nodes}
+        liveEdges={edges}
       />
 
       {/* ============================================================== */}
