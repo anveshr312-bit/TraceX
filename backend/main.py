@@ -29,19 +29,21 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS Setup - Allow Person 2 Vite frontend on :3000
+# CORS — allow local dev + Vercel deployments + Render itself
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:5173",
-        "*"
+        "https://*.vercel.app",
+        "*",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Include All Routers
 app.include_router(api_router)
