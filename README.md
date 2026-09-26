@@ -15,7 +15,7 @@
 - 🎯 **Selected Track**: `[Track Name: e.g., AI & Machine Learning / Web Automation / Open Track]`
 - 🔎 **SerpApi Integration Breakdown**: [Jump to SerpApi Section](#-how-the-project-uses-serpapi)
 
-[![TraceX Demo Video](https://img.youtube.com/vi/b2wgMwsDp70/maxresdefault.jpg)](https://www.youtube.com/watch?v=b2wgMwsDp70)
+[![TraceX Demo Video](https://img.youtube.com/vi/b2wgMwsDp70/maxresdefault.jpg)](https://youtu.be/qPGwaKi_wpU)
 *Click above to watch the 3-minute local demonstration of TraceX in action.*
 
 ---
