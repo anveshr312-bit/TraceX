@@ -256,11 +256,52 @@ python scripts/benchmark.py
 ---
 
 
-## 📋 Disclosures & Declarations
+## 📋 Hackathon Compliance & Disclosures
 
-- **Project Status**: Built and expanded with custom SerpApi OSINT integration for automated VASP discovery and cyber-forensic analysis.
-- **AI Tools Used**: Cursor, Antigravity/Gemini, and Claude for code optimization and architecture refactoring; Scikit-Learn (Isolation Forest & K-Means) for core on-chain behavioral anomaly modeling.
-- **Terms & Conditions**: The authors have read and agreed to all competition rules, terms, and conditions.
+### ✅ Original Work
+
+TraceX was **primarily built during the hackathon window**. All core modules — including the real-time BFS blockchain traversal engine, the 3D forensic studio UI, the Copilot grounding system, and the SerpApi-powered OSINT crawler — were designed and implemented from scratch during this period.
+
+**Pre-existing libraries, frameworks, and boilerplates used (clearly disclosed):**
+
+| Component | Source | Usage |
+|:---|:---|:---|
+| **React 19 + Vite** | Open-source framework | Frontend application scaffold |
+| **FastAPI** | Open-source framework | Backend REST/WebSocket API scaffold |
+| **Three.js / @react-three/fiber** | Open-source library | 3D WebGL rendering engine |
+| **Tailwind CSS** | Open-source library | Utility-first CSS styling |
+| **Scikit-Learn** | Open-source library | Isolation Forest ML model for anomaly scoring |
+| **SerpApi SDK** | Third-party SDK | Google Search OSINT integration |
+| **ReportLab** | Open-source library | PDF generation for Section 91 notices |
+
+No prior personal projects, tutorial templates, or third-party hackathon submissions were reused as a base. The architecture, integration logic, forensic workflow, and UI design are original to this submission.
+
+---
+
+### 🚫 No Plagiarism
+
+All code in this repository was written by the team for this hackathon. Where open-source libraries are used, they are listed above with attribution. No code was copied from other hackathon projects, GitHub repositories, or tutorials without material new work and proper attribution.
+
+---
+
+### 🤖 AI Tools Disclosure
+
+AI-assisted code generation tools were used during development, as permitted by the hackathon rules. Usage is disclosed in full below:
+
+| Tool | How It Was Used |
+|:---|:---|
+| **Google Antigravity (Gemini)** | Primary agentic coding assistant — used to build and wire the `liveBlockchainService.ts` (real BFS blockchain traversal), `ForensicWorkstation.tsx` (main studio orchestrator), `Scene3D.tsx` (3D graph engine), and backend FastAPI routes. All AI-generated code was reviewed, tested, and validated by the team. |
+| **Claude (Anthropic)** | Architecture planning and code refactoring for the copilot grounding pipeline and multi-hop graph layout mathematics. |
+| **Cursor** | In-editor AI pair programming for incremental component edits and TypeScript type fixes. |
+| **Scikit-Learn (Isolation Forest)** | ML library (not a generative AI) used for unsupervised on-chain behavioral anomaly detection. |
+
+> All AI-generated code was reviewed, manually validated against live Ethereum mainnet data (via Blockscout API), and tested end-to-end by the team. The team is responsible for all design decisions, integration logic, and final output.
+
+---
+
+### 📜 Terms & Conditions
+
+The authors have read and agreed to all competition rules, terms, and conditions.
 
 ---
 
