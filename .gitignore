@@ -53,3 +53,13 @@ Desktop.ini
 
 # Ponytail
 ponytail.md
+
+# Internal planning & workflow docs (not for public repo)
+.planning/
+TRACEX_*.md
+PERSON*.md
+GITHUB_TWO_PERSON_WORKFLOW.md
+TraceX_Person*_*.md
+
+# AI Studio raw export (code is integrated into new-ui/)
+tracex-ai-studio-export/
