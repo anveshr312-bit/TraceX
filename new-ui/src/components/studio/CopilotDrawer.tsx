@@ -226,30 +226,33 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-80 sm:w-88 bg-[#090A0E] border-l border-[#16181E] shadow-2xl z-40 flex flex-col select-none text-xs animate-in slide-in-from-right duration-150">
+    <div className="fixed inset-y-0 right-0 w-80 sm:w-[340px] bg-[#161418] border-l border-[#2E2B32]
+      shadow-2xl z-40 flex flex-col select-none text-xs">
       {/* Header */}
-      <div className="h-10 px-3 border-b border-[#16181E] flex items-center justify-between">
-        <div className="flex items-center gap-2 font-mono text-[#EEEBE2] font-medium text-[11px] tracking-tight">
-          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-          TRACEX COPILOT
+      <div className="h-11 px-4 border-b border-[#2E2B32] flex items-center justify-between">
+        <div className="flex items-center gap-2 font-mono text-[#EDE8DE] font-semibold text-[11px] tracking-wider">
+          <Sparkles className="w-3.5 h-3.5 text-[#B8935F]" />
+          INVESTIGATION COPILOT
           {liveNodes.length > 0 && (
-            <span className="ml-1 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px]">
+            <span className="ml-1 px-1.5 py-0.5 rounded bg-[#1A2B1F] border border-[#4A7C59]/50
+              text-[#6BB58A] text-[9px] font-mono">
               LIVE · {liveNodes.length}W
             </span>
           )}
         </div>
-        <button onClick={onClose} className="text-[#60636C] hover:text-[#EEEBE2] p-1 transition cursor-pointer">
+        <button onClick={onClose} className="text-[#7E7972] hover:text-[#EDE8DE] p-1 transition cursor-pointer">
           <X className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Quick prompts */}
-      <div className="p-2 border-b border-[#16181E] flex flex-wrap gap-1">
+      <div className="p-3 border-b border-[#2E2B32] flex flex-wrap gap-1.5">
         {quickPrompts.map((p, idx) => (
           <button
             key={idx}
             onClick={() => handleSend(p)}
-            className="text-[10px] px-2 py-0.5 rounded bg-[#101217] hover:bg-[#161921] text-[#8E8B83] hover:text-[#EEEBE2] border border-[#191C23] transition cursor-pointer"
+            className="text-[10px] px-2.5 py-1 rounded-md bg-[#1F1B22] hover:bg-[#2A262F]
+              text-[#A8A399] hover:text-[#EDE8DE] border border-[#2E2B32] transition cursor-pointer"
           >
             {p}
           </button>
@@ -260,15 +263,15 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {messages.map(msg => (
           <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-            <div className="text-[9px] font-mono text-[#555861] mb-1">
-              {msg.role === 'user' ? 'Investigator' : 'TraceX Forensic Engine'} • {msg.timestamp}
+            <div className="text-[9px] font-mono text-[#7E7972] mb-1">
+              {msg.role === 'user' ? 'Investigator' : 'TraceX Forensic Engine'} · {msg.timestamp}
             </div>
-            <div className={`p-2.5 rounded text-xs leading-relaxed max-w-[95%] font-sans ${
+            <div className={`p-2.5 rounded-lg text-xs leading-relaxed max-w-[95%] font-sans ${
               msg.role === 'user'
-                ? 'bg-[#151821] text-[#EEEBE2] border border-[#232836]'
+                ? 'bg-[#1F1B22] text-[#EDE8DE] border border-[#2E2B32]'
                 : msg.isDisclaimer
-                ? 'bg-[#181310] text-[#D8B493] border border-[#3A271B]'
-                : 'bg-[#0E1015] text-[#A09D95] border border-[#1A1D25]'
+                ? 'bg-[#2A1519] text-[#D8B493] border border-[#522329]'
+                : 'bg-[#1C1A1E] text-[#A8A399] border border-[#252229]'
             }`}>
               <div className="whitespace-pre-wrap">{renderText(msg.text)}</div>
             </div>
@@ -276,7 +279,7 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
         ))}
 
         {isTyping && (
-          <div className="text-[10px] font-mono text-[#60636C] p-1 animate-pulse">
+          <div className="text-[10px] font-mono text-[#7E7972] p-1 animate-pulse">
             Analysing on-chain data…
           </div>
         )}
@@ -284,7 +287,7 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
       </div>
 
       {/* Input */}
-      <div className="p-2.5 border-t border-[#16181E]">
+      <div className="p-3 border-t border-[#2E2B32]">
         <form
           onSubmit={e => { e.preventDefault(); handleSend(); }}
           className="flex items-center gap-2"
@@ -294,12 +297,16 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({
             value={inputQuery}
             onChange={e => setInputQuery(e.target.value)}
             placeholder="Ask about wallets, exits, fund flow…"
-            className="flex-1 h-8 px-2.5 rounded bg-[#0E1015] border border-[#181B22] focus:border-[#4D88FF] focus:outline-none text-xs text-[#EEEBE2] placeholder:text-[#555861] font-mono transition"
+            className="flex-1 h-9 px-3 rounded-lg bg-[#1C1A1E] border border-[#2E2B32]
+              focus:border-[#B8935F] focus:outline-none text-xs text-[#EDE8DE]
+              placeholder:text-[#7E7972] font-mono transition"
           />
           <button
             type="submit"
             disabled={!inputQuery.trim() || isTyping}
-            className="h-8 px-2.5 rounded bg-[#151821] hover:bg-[#1D212E] text-[#EEEBE2] text-xs font-medium border border-[#232733] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+            className="h-9 px-3 rounded-lg bg-[#B8935F] hover:bg-[#CFAC78]
+              text-[#131114] font-bold text-xs transition cursor-pointer
+              disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <Send className="w-3.5 h-3.5" />
           </button>

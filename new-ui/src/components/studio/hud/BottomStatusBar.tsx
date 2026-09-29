@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, ShieldCheck, Activity } from 'lucide-react';
+import { ShieldCheck, Activity } from 'lucide-react';
 
 interface BottomStatusBarProps {
   networkName?: string;
@@ -8,34 +8,37 @@ interface BottomStatusBarProps {
 }
 
 export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
-  networkName = 'Sepolia Testnet',
-  nodeCount = 13,
+  networkName = 'Ethereum Mainnet',
+  nodeCount = 0,
   hopCount = 4,
 }) => {
   return (
-    <footer className="h-10 w-full px-5 flex items-center justify-between select-none backdrop-blur-xl bg-slate-950/70 border-t border-white/10 shadow-2xl z-30 pointer-events-auto text-[11px] font-mono text-slate-400">
-      {/* Left: Network Connected */}
+    <footer className="h-9 w-full px-5 flex items-center justify-between select-none
+      bg-[#161418]/95 backdrop-blur-md border-t border-[#2E2B32] z-30 pointer-events-auto
+      text-[11px] font-mono text-[#7E7972]">
+
+      {/* Left: Network */}
       <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-        <span className="text-slate-200 font-semibold">{networkName}</span>
-        <span className="text-slate-600">•</span>
-        <span className="text-emerald-400 font-medium">Connected</span>
+        <span className="w-1.5 h-1.5 rounded-full bg-[#4A7C59] animate-pulse" />
+        <span className="text-[#A8A399]">{networkName}</span>
+        <span className="text-[#2E2B32]">·</span>
+        <span className="text-[#4A7C59]">Connected</span>
       </div>
 
-      {/* Center: Trace Stats */}
-      <div className="hidden sm:flex items-center gap-2 text-slate-300">
-        <Activity className="w-3.5 h-3.5 text-cyan-400" />
-        <span>Last trace: <strong className="text-white">2.3s</strong></span>
-        <span className="text-slate-600">|</span>
-        <span><strong className="text-white">{hopCount} hops</strong></span>
-        <span className="text-slate-600">|</span>
-        <span><strong className="text-white">{nodeCount} nodes</strong> resolved</span>
+      {/* Center: Stats */}
+      <div className="hidden sm:flex items-center gap-3 text-[#7E7972]">
+        <div className="flex items-center gap-1.5">
+          <Activity className="w-3 h-3 text-[#B8935F]" />
+          <span>{hopCount} hops</span>
+        </div>
+        <span className="text-[#252229]">|</span>
+        <span><strong className="text-[#A8A399]">{nodeCount}</strong> wallets resolved</span>
       </div>
 
-      {/* Right: Evidence Integrity */}
-      <div className="flex items-center gap-1.5 text-emerald-400 font-semibold drop-shadow-sm">
-        <ShieldCheck className="w-3.5 h-3.5 stroke-[2.2]" />
-        <span>Evidence integrity: SHA-256 verified ✓</span>
+      {/* Right: Integrity */}
+      <div className="flex items-center gap-1.5 text-[#4A7C59]">
+        <ShieldCheck className="w-3.5 h-3.5" />
+        <span>Evidence integrity: SHA-256 ✓</span>
       </div>
     </footer>
   );

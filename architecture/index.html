@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TraceX — Architecture & Forensic Graph Explorer</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #0a0e17;
+      --bg-card: #111827;
+      --bg-card-hover: #1f2937;
+      --border: #1e293b;
+      --border-accent: #0284c7;
+      --accent: #00d2ff;
+      --accent-secondary: #10b981;
+      --accent-purple: #8b5cf6;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      background: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 16px;
+      box-shadow: 0 0 12px rgba(0, 210, 255, 0.4);
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #f1f5f9, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .stat-pill {
+      background: #1e293b;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      gap: 6px;
+    }
+
+    .stat-pill strong {
+      color: var(--accent);
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      background: #0f172a;
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: rgba(0, 210, 255, 0.04);
+    }
+
+    /* Content Area */
+    .content-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tab-pane {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #0a0e17;
+    }
+
+    /* Diagram & Doc Pane */
+    .scrollable-pane {
+      height: 100%;
+      overflow-y: auto;
+      padding: 32px 48px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .diagram-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .diagram-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .diagram-desc {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .mermaid {
+      background: #0d131f;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Quick Launch Bar */
+    .quick-launch {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .launch-link {
+      background: #1e293b;
+      color: var(--text-main);
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .launch-link:hover {
+      background: #334155;
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+      .scrollable-pane {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-logo">TX</div>
+      <div class="brand-title">TraceX Architecture & Graph Intelligence</div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-pill">Nodes: <strong>879</strong></div>
+      <div class="stat-pill">Edges: <strong>2,063</strong></div>
+      <div class="stat-pill">Communities: <strong>55</strong></div>
+      <div class="stat-pill">Status: <strong style="color: #10b981;">Graph Active</strong></div>
+    </div>
+  </header>
+
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('diagrams')">🏛️ System Architecture</button>
+    <button class="tab-btn" onclick="switchTab('graph')">🌐 Interactive Knowledge Graph</button>
+    <button class="tab-btn" onclick="switchTab('callflow')">⚡ Call-Flow & Interactions</button>
+    <button class="tab-btn" onclick="switchTab('tree')">🌲 Code Hierarchy Tree</button>
+    <button class="tab-btn" onclick="switchTab('docs')">📑 Architecture Specification</button>
+  </nav>
+
+  <div class="content-container">
+
+    <!-- Tab 1: Architecture Diagrams -->
+    <div id="pane-diagrams" class="tab-pane active">
+      <div class="scrollable-pane">
+        
+        <div class="quick-launch">
+          <a class="launch-link" href="graph.html" target="_blank">↗ Open Fullscreen Graph</a>
+          <a class="launch-link" href="callflow.html" target="_blank">↗ Open Call-Flow Explorer</a>
+          <a class="launch-link" href="tree.html" target="_blank">↗ Open Hierarchy Tree</a>
+          <a class="launch-link" href="GRAPH_REPORT.md" target="_blank">↗ View Graph Report</a>
+        </div>
+
+        <!-- System Architecture Card -->
+        <div class="diagram-card">
+          <div class="diagram-title">1. End-to-End System Microservices & Layering</div>
+          <div class="diagram-desc">
+            Complete topology showing React 19 Cytoscape frontend, FastAPI gateway, forensic BFS engine, ML clustering, Neo4j graph store, and external SerpApi/RPC endpoints.
+          </div>
+          <div class="mermaid">
+graph TB
+    subgraph UI ["Client Workstation (React 19 / TypeScript)"]
+        Dashboard["Forensic Dashboard"]
+        CytoCanvas["Cytoscape.js Canvas"]
+        CopilotDrawer["AI Copilot Drawer"]
+    end
+
+    subgraph API ["FastAPI Gateway (:8000)"]
+        RouterTrace["/api/v1/trace"]
+        RouterIntel["/api/v1/intelligence"]
+        RouterCopilot["/api/v1/copilot"]
+        RouterLegal["/api/v1/freeze-notice"]
+    end
+
+    subgraph Core ["Forensics Intelligence Engine"]
+        BFS["BlockchainTracer (BFS Engine)"]
+        Rules["Intelligence Pipeline (Rules R1-R8)"]
+        KMeans["WalletClusterer (K-Means)"]
+        Agent["GroundedCopilotAgent (Tool Loop)"]
+        PDF["ReportLab Section 91 CrPC Builder"]
+    end
+
+    subgraph Ingest ["External Telemetry & OSINT"]
+        RPC["Multi-Chain RPC (Alchemy / Polygon)"]
+        Serp["SerpApi Google Crawler (VASP Attribution)"]
+    end
+
+    subgraph DB ["Persistence Layer"]
+        Relational[(SQLite / PostgreSQL)]
+        Graph[(Neo4j Graph Database)]
+    end
+
+    UI --> API
+    RouterTrace --> BFS
+    RouterIntel --> Rules
+    RouterTrace --> KMeans
+    RouterCopilot --> Agent
+    RouterLegal --> PDF
+
+    BFS --> RPC
+    BFS --> Serp
+    BFS --> Graph
+    BFS --> Relational
+    Agent --> Graph
+    Rules --> Graph
+          </div>
+        </div>
+
+        <!-- Tracing Flow & Sequence -->
+        <div class="diagram-card">
+          <div class="diagram-title">2. Multi-Hop Investigation & Statutory Freeze Sequence</div>
+          <div class="diagram-desc">
+            Autonomous multi-hop BFS peeling detection, VASP discovery, and statutory asset freeze notice generation workflow.
+          </div>
+          <div class="mermaid">
+sequenceDiagram
+    actor Investigator as Analyst
+    participant UI as React Workstation
+    participant API as FastAPI Router
+    participant Tracer as BlockchainTracer
+    participant RPC as Multi-Chain RPC
+    participant Neo4j as Neo4j Graph DB
+    participant Legal as Sec 91 CrPC Builder
+
+    Investigator->>UI: Submit Target Wallet / Tx Hash
+    UI->>API: POST /api/v1/trace/start
+    API->>Tracer: Execute BFS Multi-Hop Traversal
+    loop Hop Traversal
+        Tracer->>RPC: Query Outgoing Transfers
+        RPC-->>Tracer: Tx Logs & Balances
+        Tracer->>Neo4j: Upsert Wallet Nodes & Flow Edges
+        Tracer->>UI: Stream HOP_DISCOVERED (WebSocket)
+    end
+    Tracer-->>API: Subgraph & Laundering Paths
+    API-->>UI: Render Cytoscape Directed Graph
+    opt Generate Freeze Directive
+        Investigator->>UI: Click Generate Legal Freeze Notice
+        UI->>API: POST /api/v1/freeze-notice
+        API->>Legal: Compile Evidentiary Trail
+        Legal-->>UI: Court-Admissible Signed PDF
+    end
+          </div>
+        </div>
+
+        <!-- Deterministic Rules Pipeline -->
+        <div class="diagram-card">
+          <div class="diagram-title">3. Deterministic Forensic Rules Suite (R1–R8)</div>
+          <div class="diagram-desc">
+            Rules evaluated over the graph subgraph to detect peeling chains, privacy mixers, sybil split-merge, and exchange cashouts.
+          </div>
+          <div class="mermaid">
+graph LR
+    SubGraph["Discovered Subgraph"] --> Engine["Intelligence Pipeline"]
+    Engine --> R1["R1: Peeling Chain"]
+    Engine --> R2["R2: Mixer Interaction"]
+    Engine --> R3["R3: Velocity Anomaly"]
+    Engine --> R4["R4: Sybil Split/Merge"]
+    Engine --> R5["R5: VASP Off-Ramp"]
+    Engine --> R6["R6: Dormancy Surge"]
+    Engine --> R7["R7: Structured Value"]
+    Engine --> R8["R8: Circular Churn"]
+
+    R1 --> Output["Composite Risk Score & Verified Evidentiary Findings"]
+    R2 --> Output
+    R3 --> Output
+    R4 --> Output
+    R5 --> Output
+    R6 --> Output
+    R7 --> Output
+    R8 --> Output
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Tab 2: Interactive Knowledge Graph -->
+    <div id="pane-graph" class="tab-pane">
+      <iframe src="graph.html"></iframe>
+    </div>
+
+    <!-- Tab 3: Call-flow Explorer -->
+    <div id="pane-callflow" class="tab-pane">
+      <iframe src="callflow.html"></iframe>
+    </div>
+
+    <!-- Tab 4: Hierarchy Tree -->
+    <div id="pane-tree" class="tab-pane">
+      <iframe src="tree.html"></iframe>
+    </div>
+
+    <!-- Tab 5: Architecture Specification -->
+    <div id="pane-docs" class="tab-pane">
+      <iframe src="GRAPH_REPORT.md"></iframe>
+    </div>
+
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#0d131f',
+        primaryColor: '#0284c7',
+        primaryTextColor: '#f8fafc',
+        primaryBorderColor: '#00d2ff',
+        lineColor: '#38bdf8',
+        secondaryColor: '#1e293b',
+        tertiaryColor: '#111827'
+      }
+    });
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      const targetPane = document.getElementById('pane-' + tabId);
+      if (targetPane) {
+        targetPane.classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>
